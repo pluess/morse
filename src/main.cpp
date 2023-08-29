@@ -1,5 +1,5 @@
-#include "SPIFFS.h"
 #include <ESPmDNS.h>
+#include <SPIFFS.h>
 #include <WebServer.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -11,16 +11,20 @@ WebServer server(80);
 #define LED 2
 
 vector<String> readCredentials() {
+  Serial.println("Start readCredentials");
   File file = SPIFFS.open("/credentials.txt", "r");
 
   if (!file) {
     Serial.println("Failed to open file for reading");
+  } else {
+    Serial.println("File open for reading successfull");
   }
   vector<String> v;
   while (file.available()) {
     v.push_back(file.readStringUntil('\n'));
   }
   file.close();
+  Serial.println("End readCredentials");
   return v;
 }
 
@@ -58,17 +62,24 @@ void handleNotFound() {
 }
 
 void setup(void) {
-  vector<String> credentials = readCredentials();
-  pinMode(LED, OUTPUT);
-  digitalWrite(LED, 0);
   Serial.begin(115200);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(credentials[0], credentials[1]);
-  Serial.println("");
 
   if (!SPIFFS.begin(true)) {
     Serial.println("An Error has occurred while mounting SPIFFS");
   }
+
+  vector<String> credentials = readCredentials();
+
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, 0);
+  Serial.print("Trying to connect to ");
+  Serial.println(credentials[0]);
+  Serial.print("with ");
+  Serial.println(credentials[1]);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(credentials[0], credentials[1]);
+  Serial.println("");
 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
