@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html>
+
+<body>
+
+    <h2>Demo JavaScript in Body</h2>
+    <p id="demo">A Paragraph</p>
+    <button type="button" onclick="sendData()">Send data</button>
+
+    <script>
+        var connection = new WebSocket('ws://' + location.hostname + ':81/', ['arduino']);
+
+        function sendData() {
+            connection.send("some test data from the browser")
+        }
+
+        connection.onopen = function () {
+            connection.send('Connect ' + new Date());
+        };
+        connection.onerror = function (error) {
+            console.log('WebSocket Error ', error);
+        };
+        connection.onmessage = function (e) {
+            var a = e.data;
+            console.log('Server: ', a);
+            document.getElementById('demo').innerHTML = a;
+        };
+        connection.onclose = function () {
+            console.log('WebSocket connection closed');
+        };    
+    </script>
+
+</body>
+
+</html>
