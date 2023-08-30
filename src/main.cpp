@@ -11,20 +11,26 @@ WebServer server(80);
 #define LED 2
 
 vector<String> readCredentials() {
-  Serial.println("Start readCredentials");
   File file = SPIFFS.open("/credentials.txt", "r");
 
   if (!file) {
     Serial.println("Failed to open file for reading");
-  } else {
-    Serial.println("File open for reading successfull");
   }
   vector<String> v;
   while (file.available()) {
     v.push_back(file.readStringUntil('\n'));
   }
   file.close();
-  Serial.println("End readCredentials");
+  Serial.println("SSID: ");
+  Serial.print("[");
+  Serial.print(v[0]);
+  Serial.print("]");
+  Serial.println();
+  Serial.print("Password: ");
+  Serial.print("[");
+  Serial.print(v[1]);
+  Serial.print("]");
+  Serial.println();
   return v;
 }
 
@@ -72,10 +78,6 @@ void setup(void) {
 
   pinMode(LED, OUTPUT);
   digitalWrite(LED, 0);
-  Serial.print("Trying to connect to ");
-  Serial.println(credentials[0]);
-  Serial.print("with ");
-  Serial.println(credentials[1]);
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(credentials[0], credentials[1]);
