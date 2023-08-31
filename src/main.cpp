@@ -4,10 +4,17 @@
 #include <WebSocketsServer.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
-#include <algorithm>
-#include <string>
 
 using namespace std;
+
+struct Button {
+  const uint8_t PIN;
+  uint32_t numberKeyFaling;
+  uint32_t numberKeyRising;
+  bool pressed;
+};
+
+Button button1 = {23, 0, false};
 
 WebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -37,6 +44,20 @@ vector<String> readCredentials() {
   Serial.print("]");
   Serial.println();
   return v;
+}
+
+void IRAM_ATTR isrServiceFalling();
+
+void IRAM_ATTR isrServiceRising() {
+  attachInterrupt(button1.PIN, isrServiceFalling, FALLING);
+  button1.numberKeyRising++;
+  button1.pressed = true;
+}
+
+void IRAM_ATTR isrServiceFalling() {
+  attachInterrupt(button1.PIN, isrServiceRising, RISING);
+  button1.numberKeyFaling++;
+  button1.pressed = true;
 }
 
 void hexdump(const void *mem, uint32_t len, uint8_t cols = 16) {
@@ -183,11 +204,22 @@ void setup(void) {
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
   Serial.println("WebSocket server started");
+
+  pinMode(button1.PIN, INPUT_PULLUP);
+  attachInterrupt(button1.PIN, isrServiceRising, RISING);
+
+  Serial.println("Interrupt set-up");
 }
 
 void loop(void) {
   server.handleClient();
   webSocket.loop();
+
+  if (button1.pressed) {
+    Serial.printf("Button rising %u times\n", button1.numberKeyRising);
+    Serial.printf("Button faling %u times\n", button1.numberKeyFaling);
+    button1.pressed = false;
+  }
 
   delay(2); // allow the cpu to switch to other tasks
 }
