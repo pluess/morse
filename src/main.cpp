@@ -16,6 +16,10 @@ struct Button {
 
 Button button1 = {23, 0, false};
 
+// variables to keep track of the timing of recent interrupts
+unsigned long button_time = 0;
+unsigned long last_button_time = 0;
+
 WebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
@@ -50,14 +54,26 @@ void IRAM_ATTR isrServiceFalling();
 
 void IRAM_ATTR isrServiceRising() {
   attachInterrupt(button1.PIN, isrServiceFalling, FALLING);
-  button1.numberKeyRising++;
-  button1.pressed = true;
+  button_time = millis();
+  if (button_time - last_button_time > 100) {
+
+    button1.numberKeyRising++;
+    button1.pressed = true;
+    last_button_time = button_time;
+    Serial.println("Rising");
+  }
 }
 
 void IRAM_ATTR isrServiceFalling() {
   attachInterrupt(button1.PIN, isrServiceRising, RISING);
-  button1.numberKeyFaling++;
-  button1.pressed = true;
+  button_time = millis();
+  if (button_time - last_button_time > 100) {
+
+    button1.numberKeyFaling++;
+    button1.pressed = true;
+    last_button_time = button_time;
+    Serial.println("Faling");
+  }
 }
 
 void hexdump(const void *mem, uint32_t len, uint8_t cols = 16) {
